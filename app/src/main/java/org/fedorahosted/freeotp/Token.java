@@ -165,6 +165,10 @@ public class Token {
             binary |= (digest[off + 1] & 0xff) << 0x10;
             binary |= (digest[off + 2] & 0xff) << 0x08;
             binary |= (digest[off + 3] & 0xff);
+
+            if(isSteamToken())
+                return getSteamGuardCode(binary);
+
             binary = binary % div;
 
             // Zero pad
@@ -229,6 +233,9 @@ public class Token {
     }
 
     public int getDigits() {
+        if(isSteamToken())
+            return 5;
+
         return digits;
     }
 
@@ -302,5 +309,28 @@ public class Token {
             return Uri.parse(image);
 
         return null;
+    }
+
+    public Boolean isSteamToken() {
+        if(getIssuer().equals("Steam") || getIssuer().equals("Valve"))
+            return true;
+        return false;
+    }
+
+    public String getSteamGuardCode(int code) {
+        final byte[] steamGuardCodeChars = {
+                50, 51, 52, 53, 54, 55, 56, 57,
+                66, 67, 68, 70, 71, 72, 74, 75,
+                77, 78, 80, 81, 82, 84, 86, 87,
+                88, 89
+        };
+
+        byte[] steamGuardCode = new byte[5];
+        for (int n = 0; n < 5; n++)
+        {
+            steamGuardCode[n] = steamGuardCodeChars[(code % steamGuardCodeChars.length)];
+            code /= steamGuardCodeChars.length;
+        }
+        return new String(steamGuardCode);
     }
 }
